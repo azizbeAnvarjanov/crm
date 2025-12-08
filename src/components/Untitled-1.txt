@@ -1,0 +1,28 @@
+import { NextResponse } from "next/server";
+
+export async function POST(req) {
+  const { phone } = await req.json();
+
+  const payload = {
+    user_name: "impulsmirasmiy@gmail.com",
+    api_key: "xtonupdhy7alcvr0b3tqw2x9iaew9ogu",
+    action: "calls.make_call",
+    to: phone,
+  };
+
+  const body = new URLSearchParams();
+  body.append("request_data", JSON.stringify(payload));
+
+  const res = await fetch("https://imidental.moizvonki.ru/api/v1", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: body.toString(),
+  });
+
+  const text = await res.text();
+  console.log("MOIZVONKI RESPONSE:", text);
+
+  return new Response(text, { status: 200 });
+}
