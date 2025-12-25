@@ -46,10 +46,6 @@ export default function KindergartenLeadsComponent() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  /* ================= MASS SMS ================= */
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [smsMessage, setSmsMessage] = useState("");
-
   /* ================= FETCH ================= */
   const loadRows = async () => {
     const { data } = await supabase
@@ -123,8 +119,7 @@ export default function KindergartenLeadsComponent() {
     }
   };
 
-  /* ================= SMS ================= */
-  const handleSms = async (phone, customMessage = null) => {
+  const handleSms = async (phone) => {
     try {
       const res = await fetch("/api/moizvonki/send", {
         method: "POST",
@@ -133,7 +128,6 @@ export default function KindergartenLeadsComponent() {
           phone,
           type: "sms",
           message:
-            customMessage ||
             "Assalomu alaykum! Bog‘chamizga qiziqqaningiz uchun rahmat 😊",
         }),
       });
@@ -141,87 +135,40 @@ export default function KindergartenLeadsComponent() {
       const data = await res.json();
 
       if (!res.ok || data?.ok === false) {
-        alert(`SMS yuborilmadi: ${phone}`);
+        alert("SMS yuborilmadi");
+
         console.error(data);
         return;
       }
 
-      alert(`✉️ SMS yuborildi: ${phone}`);
+      alert("✉️ SMS yuborildi");
     } catch (err) {
       console.error(err);
       alert("Server xatosi");
     }
   };
 
-  /* ================= MASS SMS BUTTON ================= */
-  const handleMassSms = async () => {
-    if (!smsMessage) {
-      alert("Iltimos, SMS matnini kiriting!");
-      return;
-    }
-    for (const id of selectedIds) {
-      const lead = rows.find((r) => r.id === id);
-      if (lead) await handleSms(lead.phone, smsMessage);
-    }
-    setSelectedIds([]);
-    setSmsMessage("");
-  };
-
-  /* ================= CHECKBOX ================= */
-  const toggleSelect = (id) => {
-    if (selectedIds.includes(id)) {
-      setSelectedIds(selectedIds.filter((i) => i !== id));
-    } else {
-      setSelectedIds([...selectedIds, id]);
-    }
-  };
-
   return (
     <div className="w-full space-y-4">
       {/* TOP BAR */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+      <div className="flex justify-between items-center">
         <h1 className="text-xl font-bold">Leadlar</h1>
 
-        <div className="flex gap-2 flex-col md:flex-row items-start md:items-center">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Ism bo‘yicha qidirish..."
-          />
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Ism bo‘yicha qidirish..."
+        />
 
-          <Input
-            placeholder="SMS matni..."
-            value={smsMessage}
-            onChange={(e) => setSmsMessage(e.target.value)}
-          />
-
-          <Button onClick={handleMassSms} disabled={selectedIds.length === 0}>
-            Mass SMS yuborish
-          </Button>
-
-          <Button size="icon" onClick={() => setOpenSheet(true)}>
-            <Plus />
-          </Button>
-        </div>
+        <Button size="icon" onClick={() => setOpenSheet(true)}>
+          <Plus />
+        </Button>
       </div>
 
       {/* TABLE */}
       <Table className="border rounded-xl overflow-hidden">
         <TableHeader>
           <TableRow className="bg-blue-600 text-white">
-            <TableHead>
-              <input
-                type="checkbox"
-                checked={
-                  selectedIds.length === filtered.length && filtered.length > 0
-                }
-                onChange={(e) =>
-                  setSelectedIds(
-                    e.target.checked ? filtered.map((r) => r.id) : []
-                  )
-                }
-              />
-            </TableHead>
             <TableHead>№</TableHead>
             <TableHead>Ism</TableHead>
             <TableHead>Telefon</TableHead>
@@ -232,13 +179,6 @@ export default function KindergartenLeadsComponent() {
         <TableBody>
           {filtered.map((r, i) => (
             <TableRow key={r.id}>
-              <TableCell>
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(r.id)}
-                  onChange={() => toggleSelect(r.id)}
-                />
-              </TableCell>
               <TableCell>{i + 1}</TableCell>
               <TableCell>{r.name}</TableCell>
               <TableCell>{r.phone}</TableCell>
